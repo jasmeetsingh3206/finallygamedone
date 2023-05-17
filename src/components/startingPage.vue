@@ -33,13 +33,14 @@
                 <span v-if="this.invalid === 3" class="font-medium">Invalid Room Id</span>
               </div>
             </div>
-            <input
+            <div class="flex flex-col justify-items-center gap-1  "> 
+                <input
               id="my-name"
               type="text"
         
-              placeholder="Enter your name here"
+              placeholder="Enter your name here *"
               v-model="myStoreStore.myName"
-              class="border border-gray-300 rounded-md px-4 py-2 w-full sm:w-64 mb-4 shadow-lg"
+              class="border border-gray-300 rounded-md px-4 py-2 w-full sm:w-64  shadow-sm "
             />
 
             <input
@@ -49,8 +50,10 @@
               v-model="haveCode"
               class="border border-gray-300 rounded-md px-4 py-2 w-full sm:w-64 mb-4 shadow-lg"
             />
+            </div>
+          
           </div>
-          <div class="flex justify-items-center">
+          <div class="flex justify-items-center gap-3">
             <button
               type="submit"
               @click.prevent="joinGame"
@@ -61,7 +64,7 @@
             <button
               type="submit"
               @click.prevent="maingame"
-              class="bg-green-500 hover:bg-green-700 text-white font-bold py-2 px-4 rounded-md ml-3 shadow-lg"
+              class="bg-green-500 hover:bg-green-700 text-white font-bold py-2 px-4 rounded-md  shadow-lg"
             >
               Create Room
             </button>
