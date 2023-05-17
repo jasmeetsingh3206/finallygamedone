@@ -20,16 +20,16 @@
       <h1>{{ winner }} WINS!!</h1>
     </div>
     <div class="flex justify-center mt-3">
-      <span
-        v-if="this.Store.havecode == '5iztui'"
-        class="bg-blue-100 text-blue-800 text-xl font-medium mr-2 px-2.5 py-0.5 rounded"
-        >Player 2</span
+      <span class="bg-blue-100 text-blue-800 text-xl font-medium mr-2 px-2.5 py-0.5 rounded">
+        {{ Store.opponentName }}
+      </span>
+
+      <div
+        @click="Store.showEmojiPicker = !Store.showEmojiPicker"
+        class="text-2xl hover:cursor-pointer animate-[bounce.6s_ease-in-out_infinite]"
       >
-      <span
-        v-else-if="this.Store.havecode !== '5iztui'"
-        class="bg-blue-100 text-blue-800 text-xl font-medium mr-2 px-2.5 py-0.5 rounded dark:bg-blue-900 dark:text-blue-300 mt-2"
-        >Player 1</span
-      >
+        {{ Store.opponentEmoji }}
+      </div>
     </div>
 
     <canvas
@@ -57,23 +57,34 @@
       color="#3d8ab5"
     />
 
-    <div class="flex mt-3">
-      <span
-        v-if="this.Store.havecode != '5iztui'"
+    <div class="flex mt-1">
+      <button
+        @click="Store.showEmojiPicker = !Store.showEmojiPicker"
         class="bg-blue-100 text-blue-800 text-xl font-medium mr-2 px-2.5 py-0.5 rounded"
-        >Player 2</span
       >
-      <span
-        v-else-if="this.Store.havecode == '5iztui'"
-        class="bg-blue-100 text-blue-800 text-xl font-medium mr-2 px-2.5 py-0.5 rounded"
-        >Player 1</span
+        {{ Store.myName }}
+      </button>
+      <EmojiPicker
+        v-if="Store.showEmojiPicker"
+        @select="showEmoji"
+        class="fixed lg:right-40 z-50 bottom-10"
+        disable-skin-tones="true"
+        display-recent="true"
+        native="true"
+        hide-group-icons="true"
+        disabled-groups="['animals_nature', 'objects', 'symbols', 'travel_places']"
+      />
+      <button
+        @click="Store.showEmojiPicker = !Store.showEmojiPicker"
+        class="text-2xl hover:cursor-pointer animate-[bounce.6s_ease-in-out_infinite]"
       >
+        {{ Store.selectedEmoji }}
+      </button>
     </div>
 
     <div class="flex md:hidden w-full justify-between">
-      <img src="../images/next.png" class="flipimage h-14 my-3 ml-7" @click="buttonLeft" />
-
-      <img src="../images/next.png" class="h-14 my-3 mr-7" @click="buttonRight" />
+      <i class="fa fa-arrow-left h-14 mb-10 ml-9 text-5xl text-blue-900" @click="buttonLeft"></i>
+      <i class="fa fa-arrow-right h-14 mb-10 mr-9 text-5xl text-blue-900" @click="buttonRight"></i>
     </div>
     <img src="../images/logo.png" class="h-20 lg:h-80 m-5 absolute top-0 left-2" />
   </div>
@@ -87,11 +98,15 @@ import { mapStores } from 'pinia'
 import { useMyStore } from '../store/havecode'
 // import { PulseLoader } from 'vue-spinner/dist/vue-spinner.min.js'
 import { AtomSpinner, HollowDotsSpinner } from 'epic-spinners'
+import EmojiPicker from 'vue3-emoji-picker'
+// stylesheet
+import '../../node_modules/vue3-emoji-picker/dist/style.css'
 
 export default {
   name: 'helloWorld',
   components: {
-    HollowDotsSpinner
+    HollowDotsSpinner,
+    EmojiPicker: EmojiPicker
   },
   watch: {
     'Store.clientcount'(newVal) {
@@ -127,7 +142,8 @@ export default {
       checkrestart: false,
       print: false,
       audio: null,
-      bounce_sound: null
+      bounce_sound: null,
+      goalSound: null
     }
   },
   computed: {
@@ -191,13 +207,17 @@ export default {
       context_1.arc(250, 250, this.radius_1, 0, 2 * Math.PI)
       context_1.fillStyle = '#fe4f32'
       context_1.fill()
+
       this.audio = new Audio(
-        'https://docs.google.com/uc?export=download&id=1eYvjkinfqXDm8AZ03DFwWFw-yg4s0i9i'
+        'https://docs.google.com/uc?export=download&id=17diq43t5Rc8Z9ppvQG5d6PRFx9-KxemO'
       )
+      this.audio.volume = 0.4
       this.bounce_sound = new Audio(
+        'https://docs.google.com/uc?export=download&id=1ULvJnA8QyCnyRfcDLla7TFdVo2Kufymc'
+      )
+      this.goalSound = new Audio(
         'https://docs.google.com/uc?export=download&id=1X2ls1jko9rdX0Ukm6ON7WVpNsfPtXVfB'
       )
-
       this.connectToSocket()
       document.addEventListener('keydown', (event) => {
         if (event.code === 'ArrowLeft') {
@@ -221,12 +241,20 @@ export default {
     }
   },
   methods: {
+    showEmoji(e) {
+      this.Store.selectedEmoji = e.i
+      console.log(e.i)
+      console.log(e.i.type)
+      this.Store.showEmojiPicker = false
+      this.socket.emit('emojy', {
+        selectedEmoji: this.Store.selectedEmoji
+      })
+    },
     restart() {
       this.Store.restart = true
       this.$router.replace('/')
     },
     buttonLeft(e) {
-      console.log(e.target.style)
       e.target.style.opacity = '0'
       this.socket.emit('movePaddle', {
         direction: 'left',
@@ -257,7 +285,11 @@ export default {
     connectToSocket() {
       this.socket = socket
 
-      this.socket.emit('join', { roomId: this.room, havecode: this.Store.havecode })
+      this.socket.emit('join', {
+        roomId: this.room,
+        havecode: this.Store.havecode,
+        name: this.Store.myName
+      })
       let data = {
         x_1: this.x_1,
         y_1: this.y_1,
@@ -281,6 +313,11 @@ export default {
       }
       this.socket.emit('life', data)
 
+      this.socket.on('emojies', (data) => {
+        console.log(data.SelectedEmoji)
+        this.Store.opponentEmoji = data.SelectedEmoji
+      })
+
       this.socket.on('room-created', (data) => {
         this.code = data.roomId
       })
@@ -289,16 +326,16 @@ export default {
       })
 
       this.socket.on('message', (data) => {
-        //console.log(data.position);
         this.greyX_1 = data.position
         this.secondgreyX_1 = data.secondpostion
       })
-      this.socket.on('collision', (data) => {
+      this.socket.on('collision', () => {
         this.bounce_sound.play()
-        console.log(data)
+      })
+      this.socket.on('goalsound', () => {
+        if (this.gameover !== 'over') this.goalSound.play()
       })
       this.socket.on('gameanimated', (data) => {
-        // console.log(data)
         this.x_1 = data.x_cordinate_center
         this.y_1 = data.y_cordinate_center
         this.dx_1 = data.xspeed
@@ -317,12 +354,19 @@ export default {
       this.socket.on('gameover', (data) => {
         this.gameover = data.gamestatus
         this.winner = data.winner
+        this.audio.pause()
+        this.goalSound.pause()
+        this.bounce_sound.pause()
 
         this.updatewinnerstatus()
       })
       this.socket.on('scoreUpdate', (data) => {
         this.countP1 = data.countPlayer1
         this.countP2 = data.countPlayer2
+      })
+      this.socket.on('playernames', (data) => {
+        if (this.Store.havecode === '5iztui') this.Store.opponentName = data.player2name
+        else this.Store.opponentName = data.player1name
       })
     },
 
@@ -367,10 +411,6 @@ export default {
         context_1.fillStyle = '#ef476f'
         context_1.fillRect(this.greyX_1 + 1, this.greyY_1, 80, 5)
         context_1.stroke()
-        // context_1.beginPath()
-        // context_1.fillStyle = 'black'
-        // context_1.fillRect(this.secondgreyX_1 + 1, this.secondgreyY_1, 80, 5)
-        // context_1.stroke()
 
         context_1.beginPath()
         context_1.fillStyle = '#ef476f'
@@ -415,7 +455,6 @@ export default {
       this.checkrestart = true
 
       this.print = true
-      this.audio.pause()
     }
   },
   beforeUnmount() {

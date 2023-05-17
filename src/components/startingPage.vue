@@ -2,8 +2,8 @@
   <div>
     <div class="flex flex-col items-center justify-center h-screen bg-green-100">
       <h1 class="wave-animation font-black text-3xl">Paddle Prodigy</h1>
-      <img class="rounded-xl md:mt-2 sm:m-5 h-72 sm:h-[45dvh]" src="../images/logo.png" alt="" />
-      <!-- <h2 class="text-3xl font-bold mb-8">Start Game</h2> -->
+      <img class="rounded-xl md:mt-2 sm:m-5 h-80 sm:h-[55dvh]" src="../images/logo.png" alt="" />
+      
       <div class="mt-6">
         <form class="flex items-center justify-center space-x-4 flex-wrap mr-4 flex-col">
           <label for="room-name" class="sr-only">Room Name:</label>
@@ -28,9 +28,20 @@
               </svg>
               <span class="sr-only">Info</span>
               <div>
-                <span class="font-medium">Invalid Room Id</span>
+                <span v-if="this.invalid === 1" class="font-medium">Invalid Room Id and Name</span>
+                <span v-if="this.invalid === 2" class="font-medium">Invalid Name</span>
+                <span v-if="this.invalid === 3" class="font-medium">Invalid Room Id</span>
               </div>
             </div>
+            <input
+              id="my-name"
+              type="text"
+        
+              placeholder="Enter your name here"
+              v-model="myStoreStore.myName"
+              class="border border-gray-300 rounded-md px-4 py-2 w-full sm:w-64 mb-4 shadow-lg"
+            />
+
             <input
               id="room-name"
               type="text"
@@ -57,6 +68,7 @@
           </div>
         </form>
         <div v-if="myStoreStore.restart == true">{{ restartMessage() }}</div>
+        
       </div>
     </div>
   </div>
@@ -84,15 +96,27 @@ export default {
     joinGame() {
       this.myStoreStore.havecode = this.haveCode
 
-      console.log(this.haveCode.length)
-      if (this.haveCode != '' && this.haveCode.length == 6) {
+      if (this.haveCode != '' && this.haveCode.length == 6 && this.myStoreStore.myName != '') {
         this.$router.replace('/game')
       } else {
-        this.invalid = 1
+        console.log(this.myStoreStore.myName ===null)
+        if (this.haveCode === ''&&this.myStoreStore.myName===null){
+          this.invalid = 1
+        } else if (this.myStoreStore.myName ===null&&this.haveCode != '') {
+          this.invalid = 2
+        } else if(this.myStoreStore.myName !==null&&this.haveCode ===''){
+          this.invalid = 3
+        }
       }
+      
     },
     maingame() {
-      this.$router.replace('/game')
+      console.log(this.myStoreStore.myName)
+      if (this.myStoreStore.myName!==''&&this.myStoreStore.myName!==null) {
+        this.$router.replace('/game')
+      } else {
+      this.invalid=2;
+      }
     },
 
     animateBackground() {
